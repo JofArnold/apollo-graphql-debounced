@@ -89,8 +89,10 @@ function graphqlDebounced(query, delay = 1000) {
         }
 
         componentWillUpdate(nextProps, nextState) {
-          // TODO: Do deep equal only on the variables
-          if (!deepEqual(this.props, nextProps)) {
+          const variablesHaveChanged = documentVariables.find(v => {
+            return !deepEqual(this.props[v], nextProps[v]);
+          });
+          if (variablesHaveChanged) {
             this.setState({
               ...nextState,
               response: { ...nextState.response, loading: true },
