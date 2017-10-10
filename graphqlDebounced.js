@@ -1,6 +1,5 @@
 import React, { Component } from "react";
 import debounce from "lodash/debounce";
-import deepEqual from "lodash/isEqual";
 import { withApollo } from "react-apollo";
 
 // Work in progress faking of Apollo's `graphql` HOC. Has essentially the same API.
@@ -44,6 +43,27 @@ import { withApollo } from "react-apollo";
 //        <CausesGraphQLFetchWhenPropsChange counter={this.state.counter} />
 //      </div>
 //   }
+
+// Stolen from Apollo
+shallowEqual(objA, objB) {
+  if (!objA || !objB) return false;
+  if (objA === objB) return true;
+
+  const keysA = Object.keys(objA);
+  const keysB = Object.keys(objB);
+
+  if (keysA.length !== keysB.length) return false;
+
+  // Test for A's keys different from B.
+  const hasOwn = Object.prototype.hasOwnProperty;
+  for (let i = 0; i < keysA.length; i++) {
+    if (!hasOwn.call(objB, keysA[i]) || objA[keysA[i]] !== objB[keysA[i]]) {
+      return false;
+    }
+  }
+
+  return true;
+}
 
 // Parse AST to determine what variables are being sent through
 function getVariableNames(query) {
@@ -90,7 +110,7 @@ function graphqlDebounced(query, delay = 1000) {
 
         componentWillUpdate(nextProps, nextState) {
           const variablesHaveChanged = documentVariables.find(v => {
-            return !deepEqual(this.props[v], nextProps[v]);
+            return !shallowEqual(this.props[v], nextProps[v]);
           });
           if (variablesHaveChanged) {
             this.setState({
